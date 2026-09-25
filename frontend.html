@@ -1,0 +1,2523 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FoodRescue — Smart Food Donation & Rescue Network</title>
+
+  <!-- Google Fonts & Leaflet CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Lucide Icons Library -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --primary-light: #ecfdf5;
+      --primary-glow: rgba(16, 185, 129, 0.25);
+
+      --accent: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.25);
+      --accent-blue: #3b82f6;
+      --danger: #ef4444;
+
+      --bg-dark: #0f172a;
+      --surface: #ffffff;
+      --surface-subtle: #f8fafc;
+      --border: #e2e8f0;
+      --border-focus: #10b981;
+
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-white: #ffffff;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+
+      --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+      --shadow-md: 0 10px 30px -5px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 20px 45px -10px rgba(16, 185, 129, 0.15);
+      --shadow-modal: 0 25px 60px -15px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f1f5f9;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Icon styling */
+    .lucide,
+    svg.lucide {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2.2px;
+      vertical-align: middle;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .icon-sm {
+      width: 15px;
+      height: 15px;
+      stroke-width: 2.2px;
+    }
+
+    .icon-lg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2.2px;
+    }
+
+    /* Top Navigation */
+    .navbar {
+      height: 76px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4%;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 24px;
+      color: #0f172a;
+      cursor: pointer;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 6px 16px var(--primary-glow);
+    }
+
+    .brand-icon svg {
+      width: 22px;
+      height: 22px;
+      stroke: white;
+    }
+
+    .brand span {
+      color: var(--primary);
+    }
+
+    .nav-center {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #f8fafc;
+      padding: 4px;
+      border-radius: 30px;
+      border: 1px solid var(--border);
+    }
+
+    .role-pill {
+      border: none;
+      background: transparent;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .role-pill.active {
+      background: white;
+      color: #0f172a;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+    }
+
+    .role-pill:hover:not(.active) {
+      color: var(--primary);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      text-decoration: none;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      box-shadow: 0 6px 20px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: white;
+      color: var(--text-main);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .btn-accent {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white;
+      box-shadow: 0 6px 18px var(--accent-glow);
+    }
+
+    .btn-accent:hover {
+      background: linear-gradient(135deg, #d97706, #b45309);
+    }
+
+    .btn-outline-primary {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-outline-primary:hover {
+      background: #d1fae5;
+    }
+
+    .btn-sm {
+      padding: 8px 14px;
+      font-size: 12.5px;
+      border-radius: 10px;
+    }
+
+    /* Container */
+    .container {
+      width: min(1200px, 94%);
+      margin: 0 auto;
+    }
+
+    /* Hero Section (When logged out) */
+    .hero {
+      padding: 60px 0 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 54px;
+      line-height: 1.08;
+      font-weight: 900;
+      color: #0f172a;
+      margin-bottom: 20px;
+      letter-spacing: -1px;
+    }
+
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, #10b981, #059669);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 35px;
+    }
+
+    .stat-box {
+      background: white;
+      padding: 20px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-lbl {
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .hero-card {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-md);
+    }
+
+    .hero-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .live-pulse {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #10b981;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.25);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
+      }
+
+      70% {
+        box-shadow: 0 0 0 9px rgba(16, 185, 129, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+      }
+    }
+
+    /* Maps */
+    .map-box {
+      height: 340px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Dashboard Layout */
+    .dashboard-view {
+      padding: 30px 0 60px;
+    }
+
+    .dash-banner {
+      background: linear-gradient(135deg, #064e3b, #065f46, #047857);
+      color: white;
+      padding: 36px 40px;
+      border-radius: var(--radius-xl);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      box-shadow: 0 15px 35px rgba(6, 78, 59, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dash-banner::after {
+      content: '';
+      position: absolute;
+      right: -40px;
+      bottom: -60px;
+      width: 250px;
+      height: 250px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+      border-radius: 50%;
+    }
+
+    .dash-banner h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 34px;
+      font-weight: 800;
+      margin: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .dash-banner p {
+      opacity: 0.88;
+      font-size: 15px;
+      max-width: 580px;
+    }
+
+    /* Submodule Tabs */
+    .submodule-nav {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 28px;
+      background: white;
+      padding: 8px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .submodule-btn {
+      flex: 1;
+      white-space: nowrap;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      border: none;
+      background: transparent;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .submodule-btn:hover {
+      background: #f1f5f9;
+      color: var(--text-main);
+    }
+
+    .submodule-btn.active {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    /* Content Cards */
+    .card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .card-desc {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 22px;
+    }
+
+    /* Form Grid */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .form-grid.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      background: #fcfdfd;
+      font-size: 14.5px;
+      font-family: inherit;
+      color: #0f172a;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--primary);
+      background: white;
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    /* Request & Delivery Item List */
+    .item-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .item-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .item-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: #cbd5e1;
+    }
+
+    .item-info h4 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .item-meta {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      font-size: 13.5px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .meta-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .item-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .badge-available {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .badge-accepted {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .badge-transit {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .badge-completed {
+      background: #e0e7ff;
+      color: #4338ca;
+    }
+
+    /* Modal Overlay */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 2000;
+      opacity: 1;
+      transition: opacity 0.2s ease;
+    }
+
+    .overlay.hidden {
+      display: none !important;
+    }
+
+    .modal {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: 36px;
+      width: min(560px, 100%);
+      box-shadow: var(--shadow-modal);
+      position: relative;
+      animation: modalSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalSlide {
+      from {
+        transform: translateY(20px) scale(0.97);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .close-btn {
+      position: absolute;
+      right: 24px;
+      top: 24px;
+      border: none;
+      background: #f1f5f9;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .auth-tabs {
+      display: flex;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 12px;
+      margin: 20px 0;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      font-weight: 700;
+      border-radius: 9px;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .auth-tab.active {
+      background: white;
+      color: #0f172a;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+
+    .role-grid-selector {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .role-option {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      background: #f8fafc;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .role-option.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .role-option strong {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: #0f172a;
+      margin-top: 4px;
+    }
+
+    .role-option small {
+      color: var(--text-muted);
+      font-size: 11.5px;
+    }
+
+    .quick-login-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 18px 0;
+      padding: 12px;
+      background: #f8fafc;
+      border-radius: var(--radius-md);
+      border: 1px dashed var(--border);
+    }
+
+    /* Live Tracking Widget */
+    .tracking-timeline {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin: 30px 10px 20px;
+    }
+
+    .tracking-timeline::before {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: 30px;
+      right: 30px;
+      height: 3px;
+      background: #e2e8f0;
+      z-index: 1;
+    }
+
+    .timeline-step {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .timeline-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: white;
+      border: 3px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #64748b;
+      box-shadow: 0 0 0 4px white;
+    }
+
+    .timeline-dot svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+    }
+
+    .timeline-step.done .timeline-dot {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .timeline-step.active .timeline-dot {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+      box-shadow: 0 0 0 5px var(--accent-glow);
+    }
+
+    .timeline-label {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #475569;
+    }
+
+    /* Custom Leaflet SVG Map Markers */
+    .custom-map-icon {
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .custom-map-icon.rider {
+      background: #10b981;
+      color: white;
+      box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.35);
+    }
+
+    .custom-map-icon.donor {
+      background: #3b82f6;
+      color: white;
+      box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.3);
+    }
+
+    .custom-map-icon.ngo {
+      background: #f59e0b;
+      color: white;
+      box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.3);
+    }
+
+    .custom-map-icon svg {
+      width: 17px;
+      height: 17px;
+      stroke: white;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      background: #0f172a;
+      color: white;
+      padding: 14px 22px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: toastIn 0.25s ease;
+    }
+
+    .toast svg {
+      stroke: currentColor;
+      width: 18px;
+      height: 18px;
+    }
+
+    @keyframes toastIn {
+      from {
+        transform: translateY(15px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .dash-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+      }
+
+      .nav-center {
+        display: none;
+      }
+
+      .hero h1 {
+        font-size: 40px;
+      }
+    }
+  </style>
+
+  <!-- Leaflet Library -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Socket.IO Library -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+
+<body>
+
+  <!-- Top Navigation -->
+  <nav class="navbar">
+    <div class="brand" onclick="goHome()">
+      <div class="brand-icon">
+        <i data-lucide="soup"></i>
+      </div>
+      <div>Food<span>Rescue</span></div>
+    </div>
+
+    <!-- Quick Role Switcher Pills -->
+    <div class="nav-center" id="navRolePills">
+      <button class="role-pill active" id="pill-donor" onclick="switchRole('donor')">
+        <i data-lucide="heart" class="icon-sm"></i> Donor
+      </button>
+      <button class="role-pill" id="pill-restaurant" onclick="switchRole('restaurant')">
+        <i data-lucide="utensils" class="icon-sm"></i> Restaurant
+      </button>
+      <button class="role-pill" id="pill-ngo" onclick="switchRole('ngo')">
+        <i data-lucide="building-2" class="icon-sm"></i> NGO
+      </button>
+      <button class="role-pill" id="pill-delivery_agent" onclick="switchRole('delivery_agent')">
+        <i data-lucide="truck" class="icon-sm"></i> Agent
+      </button>
+    </div>
+
+    <div class="nav-actions" id="navAuthActions">
+      <button class="btn btn-secondary btn-sm" onclick="openAuthModal('login')">
+        <i data-lucide="log-in" class="icon-sm"></i> Login
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="openAuthModal('signup')">
+        <i data-lucide="user-plus" class="icon-sm"></i> Sign Up
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="container" style="flex: 1;">
+
+    <!-- 1. HERO VIEW (Shown if not logged in or on Home) -->
+    <section id="heroSection" class="hero">
+      <div class="hero-grid">
+        <div>
+          <span class="badge">
+            <i data-lucide="sparkles" class="icon-sm"></i> FoodRescue 2.0 • Real-Time Redistribution
+          </span>
+          <h1>Rescue Surplus Food.<br><span class="highlight">Nourish Communities.</span></h1>
+          <p>A unified network connecting individual donors, restaurants, verified NGOs, and dedicated delivery agents
+            with live GPS tracking.</p>
+
+          <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="openAuthModal('signup')">
+              Get Started Free <i data-lucide="arrow-right" class="icon-sm"></i>
+            </button>
+            <button class="btn btn-secondary" onclick="quickDemoLogin('donor')">
+              <i data-lucide="heart" class="icon-sm"></i> Instant Demo (Donor)
+            </button>
+            <button class="btn btn-secondary" onclick="quickDemoLogin('delivery_agent')">
+              <i data-lucide="truck" class="icon-sm"></i> Instant Demo (Rider)
+            </button>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat-box">
+              <div class="stat-val" id="statMeals">
+                <i data-lucide="utensils" style="color:var(--primary); width:26px; height:26px;"></i> 12,480+
+              </div>
+              <div class="stat-lbl">Meals Rescued</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="statNgos">
+                <i data-lucide="building-2" style="color:var(--accent-blue); width:26px; height:26px;"></i> 180+
+              </div>
+              <div class="stat-lbl">Verified NGOs</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="statCo2">
+                <i data-lucide="leaf" style="color:var(--primary); width:26px; height:26px;"></i> 22.4 Tons
+              </div>
+              <div class="stat-lbl">CO₂ Emissions Saved</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Network Interactive Map Preview -->
+        <div class="hero-card">
+          <div class="hero-card-header">
+            <div>
+              <h3 style="font-size: 18px; font-weight: 800; display:flex; align-items:center; gap:8px;">
+                <i data-lucide="map-pin" style="color:var(--primary);"></i> Live Operations Grid
+              </h3>
+              <p style="font-size: 13px; color: var(--text-muted); margin-top:2px;">Active Donors, Food Banks & Rescuers
+              </p>
+            </div>
+            <div class="live-pulse">
+              <span class="pulse-dot"></span> Live GPS Active
+            </div>
+          </div>
+          <div id="homePreviewMap" class="map-box"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. DASHBOARD VIEW (Role-Based) -->
+    <section id="dashboardSection" class="dashboard-view" style="display: none;">
+      <!-- Welcome Header Banner -->
+      <div class="dash-banner">
+        <div>
+          <span class="badge" style="background: rgba(255,255,255,0.2); color: white; border: none;" id="userRoleBadge">
+            <i data-lucide="shield" class="icon-sm"></i> ROLE HUB
+          </span>
+          <h2 id="userWelcomeTitle">Welcome Back</h2>
+          <p id="userRoleSubtitle">Manage your rescue missions and real-time coordination.</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; z-index: 2;">
+          <button class="btn btn-secondary btn-sm" onclick="openRoleSwitchModal()">
+            <i data-lucide="refresh-cw" class="icon-sm"></i> Switch Role
+          </button>
+          <button class="btn btn-sm"
+            style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3);"
+            onclick="logout()">
+            <i data-lucide="log-out" class="icon-sm"></i> Logout
+          </button>
+        </div>
+      </div>
+
+      <!-- Submodule Navigation Bar (Dynamic per role) -->
+      <div class="submodule-nav" id="submoduleNav"></div>
+
+      <!-- Submodule Display Area -->
+      <div id="submoduleContent"></div>
+    </section>
+
+  </main>
+
+  <!-- AUTHENTICATION MODAL -->
+  <div id="authModal" class="overlay hidden">
+    <div class="modal">
+      <button class="close-btn" onclick="closeAuthModal()">
+        <i data-lucide="x" class="icon-sm"></i>
+      </button>
+      <h2 id="modalTitle" style="font-family: 'Outfit'; font-size: 26px;">Welcome to FoodRescue</h2>
+      <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">Connect with donors, NGOs, and delivery
+        agents.</p>
+
+      <!-- Quick 1-Click Demo Profiles -->
+      <div style="margin-top: 16px;">
+        <span
+          style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; display:flex; align-items:center; gap:6px;">
+          <i data-lucide="zap" class="icon-sm" style="color:var(--accent);"></i> 1-Click Demo Login:
+        </span>
+        <div class="quick-login-pills">
+          <button class="btn btn-secondary btn-sm" onclick="quickDemoLogin('donor')">
+            <i data-lucide="heart" class="icon-sm" style="color:#ef4444;"></i> Donor
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="quickDemoLogin('restaurant')">
+            <i data-lucide="utensils" class="icon-sm" style="color:#f59e0b;"></i> Restaurant
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="quickDemoLogin('ngo')">
+            <i data-lucide="building-2" class="icon-sm" style="color:#3b82f6;"></i> NGO
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="quickDemoLogin('delivery_agent')">
+            <i data-lucide="truck" class="icon-sm" style="color:#10b981;"></i> Agent
+          </button>
+        </div>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="setAuthTab('login')">Sign In</button>
+        <button class="auth-tab" id="tabSignup" onclick="setAuthTab('signup')">Create Account</button>
+      </div>
+
+      <!-- Role Selector (for signup) -->
+      <div id="roleSelectorBox" style="display: none;">
+        <label style="font-size: 13px; font-weight: 700; color: #334155; display: block; margin-bottom: 8px;">Select
+          Your Primary Role:</label>
+        <div class="role-grid-selector">
+          <div class="role-option selected" id="opt-donor" onclick="selectModalRole('donor')">
+            <strong><i data-lucide="heart" class="icon-sm" style="color:#ef4444;"></i> Donor</strong>
+            <small>Individual food donor</small>
+          </div>
+          <div class="role-option" id="opt-restaurant" onclick="selectModalRole('restaurant')">
+            <strong><i data-lucide="utensils" class="icon-sm" style="color:#f59e0b;"></i> Restaurant Owner</strong>
+            <small>Commercial kitchens</small>
+          </div>
+          <div class="role-option" id="opt-ngo" onclick="selectModalRole('ngo')">
+            <strong><i data-lucide="building-2" class="icon-sm" style="color:#3b82f6;"></i> NGO</strong>
+            <small>Shelter & food bank</small>
+          </div>
+          <div class="role-option" id="opt-delivery_agent" onclick="selectModalRole('delivery_agent')">
+            <strong><i data-lucide="truck" class="icon-sm" style="color:#10b981;"></i> Delivery Agent</strong>
+            <small>Rescue rider</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Fields -->
+      <form onsubmit="handleAuthSubmit(event)">
+        <div class="form-group" id="nameGroup" style="display: none; margin-bottom: 14px;">
+          <label><i data-lucide="user" class="icon-sm"></i> Full Name / Organization Name</label>
+          <input type="text" id="authName" placeholder="e.g. Aarav Sharma or Royal Spice Bistro">
+        </div>
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label><i data-lucide="mail" class="icon-sm"></i> Email Address</label>
+          <input type="email" id="authEmail" required placeholder="user@foodrescue.org">
+        </div>
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label><i data-lucide="lock" class="icon-sm"></i> Password</label>
+          <input type="password" id="authPassword" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 13px;" id="authSubmitBtn">
+          Sign In
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- APPLICATION LOGIC -->
+  <script>
+    // State management
+    const state = {
+      currentUser: null,
+      currentRole: 'donor',
+      activeSubmodule: 'donate',
+      authTab: 'login',
+      modalSelectedRole: 'donor',
+      socket: null,
+      activeMaps: {},
+      simulationIntervals: {}
+    };
+
+    // Helper to safely trigger Lucide SVG rendering
+    function renderIcons() {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    }
+
+    // Role definitions matching specification tree with Lucide icon names
+    const ROLE_CONFIG = {
+      donor: {
+        title: 'Donor',
+        badge: 'DONOR HUB',
+        icon: 'heart',
+        desc: 'Donate surplus food, view nearby NGOs, check your requests, and track food rescue live.',
+        submodules: [
+          { id: 'donate', label: 'Donate Food', icon: 'heart-handshake' },
+          { id: 'nearby_ngos', label: 'Nearby NGOs', icon: 'map-pin' },
+          { id: 'my_requests', label: 'My Requests', icon: 'clipboard-list' },
+          { id: 'live_tracking', label: 'Live Tracking', icon: 'navigation' }
+        ]
+      },
+      restaurant: {
+        title: 'Restaurant Owner',
+        badge: 'RESTAURANT PARTNER',
+        icon: 'utensils',
+        desc: 'Donate bulk commercial kitchen surplus, track donation history & impact, and monitor live pickups.',
+        submodules: [
+          { id: 'donate', label: 'Donate Food', icon: 'utensils' },
+          { id: 'donation_history', label: 'Donation History', icon: 'bar-chart-3' },
+          { id: 'live_tracking', label: 'Live Tracking', icon: 'navigation' }
+        ]
+      },
+      ngo: {
+        title: 'NGO / Food Bank',
+        badge: 'NGO RESCUE CENTER',
+        icon: 'building-2',
+        desc: 'Review incoming food donations, accept donations, request delivery agents, and monitor rescues.',
+        submodules: [
+          { id: 'donation_requests', label: 'Donation Requests', icon: 'inbox' },
+          { id: 'accept_donation', label: 'Accept Donation', icon: 'check-circle-2' },
+          { id: 'request_agent', label: 'Request Delivery Agent', icon: 'bike' },
+          { id: 'live_tracking', label: 'Live Tracking', icon: 'map' }
+        ]
+      },
+      delivery_agent: {
+        title: 'Delivery Agent',
+        badge: 'RESCUE RIDER FLEET',
+        icon: 'truck',
+        desc: 'Discover available rescue pickups, accept tasks, navigate GPS route, and view completed deliveries.',
+        submodules: [
+          { id: 'available_deliveries', label: 'Available Deliveries', icon: 'package' },
+          { id: 'accept_delivery', label: 'Accept Delivery', icon: 'zap' },
+          { id: 'navigation', label: 'Navigation', icon: 'compass' },
+          { id: 'completed_deliveries', label: 'Completed Deliveries', icon: 'award' }
+        ]
+      }
+    };
+
+    // Default Seed Profiles for quick testing
+    const DEMO_PROFILES = {
+      donor: { id: 'user_donor_1', name: 'Aarav Sharma', email: 'donor@foodrescue.org', role: 'donor', phone: '+91 98111 22334' },
+      restaurant: { id: 'user_restaurant_1', name: 'Spice & Saffron Bistro', email: 'restaurant@foodrescue.org', role: 'restaurant', phone: '+91 98222 33445' },
+      ngo: { id: 'user_ngo_1', name: 'Annapurna Food Bank', email: 'ngo@foodrescue.org', role: 'ngo', phone: '+91 98333 44556' },
+      delivery_agent: { id: 'user_agent_1', name: 'Vikram Singh (Rider)', email: 'agent@foodrescue.org', role: 'delivery_agent', phone: '+91 98444 55667' }
+    };
+
+    // Initialize Socket.io
+    function initSocket() {
+      try {
+        if (typeof io !== 'undefined') {
+          state.socket = io(window.location.origin);
+          state.socket.on('connect', () => {
+            console.log('Connected to FoodRescue Real-Time Socket Server');
+          });
+          state.socket.on('locationUpdate', (data) => {
+            console.log('Real-time location update:', data);
+          });
+        }
+      } catch (e) {
+        console.warn('Socket initialization note:', e);
+      }
+    }
+
+    // Map helper with clean tear-down to avoid "Map container is already initialized"
+    function cleanAndInitMap(elementId, center = [28.6139, 77.2090], zoom = 13) {
+      if (state.simulationIntervals[elementId]) {
+        clearInterval(state.simulationIntervals[elementId]);
+        delete state.simulationIntervals[elementId];
+      }
+      if (state.activeMaps[elementId]) {
+        try {
+          state.activeMaps[elementId].remove();
+        } catch (e) { }
+        delete state.activeMaps[elementId];
+      }
+
+      const mapContainer = document.getElementById(elementId);
+      if (!mapContainer) return null;
+
+      const map = L.map(elementId).setView(center, zoom);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      state.activeMaps[elementId] = map;
+      return map;
+    }
+
+    // Helper to create clean vector SVG markers for Leaflet maps
+    function createMapIcon(type) {
+      let iconColor = '#10b981';
+      let svgPath = '';
+
+      if (type === 'rider') {
+        iconColor = '#10b981';
+        // Truck / Bike vector path
+        svgPath = `<svg viewBox="0 0 24 24" width="18" height="18" stroke="white" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>`;
+      } else if (type === 'donor') {
+        iconColor = '#3b82f6';
+        // Heart vector path
+        svgPath = `<svg viewBox="0 0 24 24" width="18" height="18" stroke="white" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>`;
+      } else if (type === 'ngo') {
+        iconColor = '#f59e0b';
+        // Building vector path
+        svgPath = `<svg viewBox="0 0 24 24" width="18" height="18" stroke="white" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path><path d="M8 14h.01"></path><path d="M16 14h.01"></path></svg>`;
+      }
+
+      return L.divIcon({
+        html: `<div class="custom-map-icon ${type}" style="width:34px;height:34px;background:${iconColor};">${svgPath}</div>`,
+        className: 'custom-pin',
+        iconSize: [34, 34],
+        iconAnchor: [17, 17]
+      });
+    }
+
+    // Show Notification Toast with Icon
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      const iconName = type === 'success' ? 'check-circle-2' : (type === 'error' ? 'alert-triangle' : 'info');
+      toast.innerHTML = `<i data-lucide="${iconName}"></i> <span>${message}</span>`;
+      container.appendChild(toast);
+      renderIcons();
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+
+    // Role Switching
+    function switchRole(roleKey) {
+      state.currentRole = roleKey;
+
+      // Update top pills
+      document.querySelectorAll('.role-pill').forEach(btn => btn.classList.remove('active'));
+      const activePill = document.getElementById(`pill-${roleKey}`);
+      if (activePill) activePill.classList.add('active');
+
+      if (!state.currentUser) {
+        state.currentUser = DEMO_PROFILES[roleKey];
+        localStorage.setItem('foodrescue_user', JSON.stringify(state.currentUser));
+      } else {
+        state.currentUser.role = roleKey;
+        if (DEMO_PROFILES[roleKey]) {
+          state.currentUser.name = DEMO_PROFILES[roleKey].name;
+        }
+        localStorage.setItem('foodrescue_user', JSON.stringify(state.currentUser));
+      }
+
+      renderDashboard();
+      showToast(`Switched view to ${ROLE_CONFIG[roleKey].title}`);
+    }
+
+    // Render Dashboard
+    function renderDashboard() {
+      document.getElementById('heroSection').style.display = 'none';
+      document.getElementById('dashboardSection').style.display = 'block';
+
+      const config = ROLE_CONFIG[state.currentRole];
+      document.getElementById('userRoleBadge').innerHTML = `<i data-lucide="${config.icon}" class="icon-sm"></i> ${config.badge}`;
+      document.getElementById('userWelcomeTitle').innerHTML = `Welcome, ${state.currentUser?.name || config.title}`;
+      document.getElementById('userRoleSubtitle').textContent = config.desc;
+
+      // Update Nav Action to show User
+      document.getElementById('navAuthActions').innerHTML = `
+        <div style="font-size: 13px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #10b981;"></span>
+          ${state.currentUser.name} (${config.title})
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="logout()">
+          <i data-lucide="log-out" class="icon-sm"></i> Logout
+        </button>
+      `;
+
+      // Render Submodules
+      const navContainer = document.getElementById('submoduleNav');
+      navContainer.innerHTML = '';
+
+      const validSubmoduleIds = config.submodules.map(s => s.id);
+      if (!validSubmoduleIds.includes(state.activeSubmodule)) {
+        state.activeSubmodule = validSubmoduleIds[0];
+      }
+
+      config.submodules.forEach(sub => {
+        const btn = document.createElement('button');
+        btn.className = `submodule-btn ${sub.id === state.activeSubmodule ? 'active' : ''}`;
+        btn.innerHTML = `<i data-lucide="${sub.icon}"></i> ${sub.label}`;
+        btn.onclick = () => {
+          state.activeSubmodule = sub.id;
+          renderDashboard();
+        };
+        navContainer.appendChild(btn);
+      });
+
+      renderActiveSubmodule();
+      renderIcons();
+    }
+
+    // Active Submodule Dispatcher
+    function renderActiveSubmodule() {
+      const container = document.getElementById('submoduleContent');
+      const role = state.currentRole;
+      const sub = state.activeSubmodule;
+
+      // DONOR SUBMODULES
+      if (role === 'donor') {
+        if (sub === 'donate') renderDonateForm(container, 'donor');
+        else if (sub === 'nearby_ngos') renderNearbyNgos(container);
+        else if (sub === 'my_requests') renderMyRequests(container);
+        else if (sub === 'live_tracking') renderLiveTracking(container);
+      }
+      // RESTAURANT OWNER SUBMODULES
+      else if (role === 'restaurant') {
+        if (sub === 'donate') renderDonateForm(container, 'restaurant');
+        else if (sub === 'donation_history') renderDonationHistory(container);
+        else if (sub === 'live_tracking') renderLiveTracking(container);
+      }
+      // NGO SUBMODULES
+      else if (role === 'ngo') {
+        if (sub === 'donation_requests') renderNgoDonationRequests(container);
+        else if (sub === 'accept_donation') renderNgoAcceptDonation(container);
+        else if (sub === 'request_agent') renderNgoRequestAgent(container);
+        else if (sub === 'live_tracking') renderLiveTracking(container);
+      }
+      // DELIVERY AGENT SUBMODULES
+      else if (role === 'delivery_agent') {
+        if (sub === 'available_deliveries') renderAgentAvailableDeliveries(container);
+        else if (sub === 'accept_delivery') renderAgentAcceptDelivery(container);
+        else if (sub === 'navigation') renderAgentNavigation(container);
+        else if (sub === 'completed_deliveries') renderAgentCompletedDeliveries(container);
+      }
+      renderIcons();
+    }
+
+    // ==========================================
+    // 1. DONATE FOOD (Donor & Restaurant Owner)
+    // ==========================================
+    function renderDonateForm(container, userType) {
+      const isRestaurant = userType === 'restaurant';
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="${isRestaurant ? 'utensils' : 'heart-handshake'}" style="color:var(--primary);"></i>
+            ${isRestaurant ? 'Commercial Food Surplus Donation' : 'Donate Surplus Food'}
+          </div>
+          <p class="card-desc">${isRestaurant ? 'List safe, untouched surplus from your kitchen or buffet to distribute via verified NGOs.' : 'Every meal rescued makes a difference. Share your extra food with people in need.'}</p>
+          
+          <form onsubmit="handleDonateSubmit(event, '${userType}')">
+            <div class="form-grid">
+              <div class="form-group">
+                <label><i data-lucide="file-text" class="icon-sm"></i> Food Item Description *</label>
+                <input type="text" id="foodName" required placeholder="${isRestaurant ? 'e.g. 50 Servings Dal Makhani & Jeera Rice' : 'e.g. Fresh Roti, Sabzi & Dal'}">
+              </div>
+              <div class="form-group">
+                <label><i data-lucide="package" class="icon-sm"></i> Quantity / Estimated Servings *</label>
+                <input type="text" id="foodQuantity" required placeholder="${isRestaurant ? 'e.g. 60 meals (18 kg)' : 'e.g. 20 meals (packed)'}">
+              </div>
+              <div class="form-group">
+                <label><i data-lucide="layers" class="icon-sm"></i> Category</label>
+                <select id="foodCategory">
+                  <option value="Vegetarian">Vegetarian</option>
+                  <option value="Non-Vegetarian">Non-Vegetarian</option>
+                  <option value="Bakery">Bakery & Bread</option>
+                  <option value="Packaged">Packaged / Canned</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label><i data-lucide="clock" class="icon-sm"></i> Consumption Deadline (Safe within) *</label>
+                <input type="text" id="foodDeadline" required placeholder="e.g. Within 4 hours (Stored hot)">
+              </div>
+              <div class="form-group full">
+                <label><i data-lucide="map-pin" class="icon-sm"></i> Pickup Address & Landmark *</label>
+                <input type="text" id="pickupAddress" required placeholder="${isRestaurant ? 'Restaurant Kitchen Door, Hauz Khas Village, New Delhi' : 'A-42 Connaught Place, New Delhi'}">
+              </div>
+              <div class="form-group full">
+                <label><i data-lucide="message-square" class="icon-sm"></i> Special Instructions / Packaging Notes</label>
+                <textarea id="pickupNotes" rows="2" placeholder="e.g. Packed in clean foil containers. Contact kitchen manager upon arrival."></textarea>
+              </div>
+            </div>
+            
+            <div style="margin-top: 24px; display: flex; gap: 12px; align-items: center;">
+              <button type="submit" class="btn btn-primary">
+                Publish Donation to NGOs <i data-lucide="arrow-right" class="icon-sm"></i>
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="state.activeSubmodule='nearby_ngos'; renderDashboard();">
+                <i data-lucide="map-pin" class="icon-sm"></i> Find Nearby NGOs
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+      renderIcons();
+    }
+
+    async function handleDonateSubmit(e, donorType) {
+      e.preventDefault();
+      const foodName = document.getElementById('foodName').value;
+      const quantity = document.getElementById('foodQuantity').value;
+      const category = document.getElementById('foodCategory').value;
+      const safetyDeadline = document.getElementById('foodDeadline').value;
+      const pickupAddress = document.getElementById('pickupAddress').value;
+      const notes = document.getElementById('pickupNotes').value;
+
+      try {
+        const res = await fetch('/api/donations/donate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            foodName,
+            quantity,
+            category,
+            safetyDeadline,
+            pickupLocation: { address: pickupAddress, coordinates: [77.2195, 28.6315] },
+            notes,
+            donorId: state.currentUser?.id || 'user_donor_1',
+            donorName: state.currentUser?.name || 'Aarav Sharma',
+            donorType: donorType
+          })
+        });
+
+        await res.json();
+        showToast('Donation posted successfully! Nearby NGOs are notified.');
+
+        if (donorType === 'restaurant') {
+          state.activeSubmodule = 'donation_history';
+        } else {
+          state.activeSubmodule = 'my_requests';
+        }
+        renderDashboard();
+      } catch (err) {
+        showToast('Donation submitted (Local mode active)');
+        state.activeSubmodule = donorType === 'restaurant' ? 'donation_history' : 'my_requests';
+        renderDashboard();
+      }
+    }
+
+    // ==========================================
+    // 2. NEARBY NGOS (Donor)
+    // ==========================================
+    async function renderNearbyNgos(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="map-pin" style="color:var(--primary);"></i> Nearby Verified NGOs & Food Banks
+          </div>
+          <p class="card-desc">Partner relief organizations in your vicinity ready to receive and distribute your food donation.</p>
+          <div id="ngoMap" class="map-box" style="margin-bottom: 24px;"></div>
+          <div class="item-list" id="ngoList">Loading nearby NGOs...</div>
+        </div>
+      `;
+      renderIcons();
+
+      try {
+        const res = await fetch('/api/donations/nearby-ngos');
+        const ngos = await res.json();
+
+        const listEl = document.getElementById('ngoList');
+        listEl.innerHTML = ngos.map(ngo => `
+          <div class="item-card">
+            <div class="item-info">
+              <h4>
+                <i data-lucide="building-2" style="color:var(--accent-blue);"></i> ${ngo.name} 
+                <span class="item-badge badge-available"><i data-lucide="check" class="icon-sm"></i> Verified Partner</span>
+              </h4>
+              <div class="item-meta">
+                <span class="meta-tag"><i data-lucide="map-pin" class="icon-sm"></i> ${ngo.address}</span>
+                <span class="meta-tag"><i data-lucide="navigation" class="icon-sm"></i> <b>${ngo.distanceKm} km</b> away</span>
+                <span class="meta-tag"><i data-lucide="users" class="icon-sm"></i> Capacity: ${ngo.capacity}</span>
+                <span class="meta-tag"><i data-lucide="phone" class="icon-sm"></i> ${ngo.phone}</span>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="sendDonationRequestToNgo('${ngo.name}')">
+              <i data-lucide="send" class="icon-sm"></i> Send Donation
+            </button>
+          </div>
+        `).join('');
+        renderIcons();
+
+        setTimeout(() => {
+          const map = cleanAndInitMap('ngoMap', [28.6139, 77.2090], 12);
+          if (map) {
+            L.marker([28.6139, 77.2090], { icon: createMapIcon('donor') })
+              .addTo(map).bindPopup('<b>Your Location</b><br>Connaught Place').openPopup();
+
+            ngos.forEach(n => {
+              L.marker([n.coordinates[1], n.coordinates[0]], { icon: createMapIcon('ngo') })
+                .addTo(map)
+                .bindPopup(`<b>${n.name}</b><br>${n.address}<br>Capacity: ${n.capacity}`);
+            });
+          }
+        }, 150);
+
+      } catch (err) {
+        document.getElementById('ngoList').innerHTML = `<p style="color:var(--text-muted)">Unable to load NGOs right now.</p>`;
+      }
+    }
+
+    function sendDonationRequestToNgo(ngoName) {
+      showToast(`Request sent to ${ngoName}! They will coordinate rescue pickup.`);
+      state.activeSubmodule = 'my_requests';
+      renderDashboard();
+    }
+
+    // ==========================================
+    // 3. MY REQUESTS (Donor)
+    // ==========================================
+    async function renderMyRequests(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="clipboard-list" style="color:var(--primary);"></i> My Donation Requests
+          </div>
+          <p class="card-desc">Track status, NGO confirmation, and assigned delivery agents for your food contributions.</p>
+          <div class="item-list" id="requestsList">Loading your donations...</div>
+        </div>
+      `;
+      renderIcons();
+
+      try {
+        const res = await fetch('/api/donations/my-requests');
+        const list = await res.json();
+
+        const listEl = document.getElementById('requestsList');
+        if (!list.length) {
+          listEl.innerHTML = `<p style="color:var(--text-muted)">No donations yet. Click 'Donate Food' to make your first rescue listing!</p>`;
+          return;
+        }
+
+        listEl.innerHTML = list.map(item => `
+          <div class="item-card">
+            <div class="item-info">
+              <h4>
+                <i data-lucide="package" style="color:var(--primary);"></i> ${item.foodName} 
+                <span class="item-badge ${getStatusBadgeClass(item.status)}">
+                  <i data-lucide="${getStatusIcon(item.status)}" class="icon-sm"></i> ${formatStatus(item.status)}
+                </span>
+              </h4>
+              <div class="item-meta">
+                <span class="meta-tag"><i data-lucide="archive" class="icon-sm"></i> <b>${item.quantity}</b></span>
+                <span class="meta-tag"><i data-lucide="tag" class="icon-sm"></i> ${item.category}</span>
+                <span class="meta-tag"><i data-lucide="clock" class="icon-sm"></i> ${item.safetyDeadline}</span>
+                <span class="meta-tag"><i data-lucide="map-pin" class="icon-sm"></i> ${item.pickupLocation?.address || 'New Delhi'}</span>
+                ${item.ngoName ? `<span class="meta-tag"><i data-lucide="building-2" class="icon-sm"></i> Assigned: <b>${item.ngoName}</b></span>` : ''}
+                ${item.agentName ? `<span class="meta-tag"><i data-lucide="truck" class="icon-sm"></i> Agent: <b>${item.agentName}</b></span>` : ''}
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-outline-primary btn-sm" onclick="openLiveTracking('${item._id}')">
+                <i data-lucide="navigation" class="icon-sm"></i> Track Live
+              </button>
+            </div>
+          </div>
+        `).join('');
+        renderIcons();
+      } catch (e) {
+        document.getElementById('requestsList').innerHTML = `<p>Failed to load requests.</p>`;
+      }
+    }
+
+    // ==========================================
+    // 4. DONATION HISTORY & IMPACT (Restaurant Owner)
+    // ==========================================
+    async function renderDonationHistory(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="bar-chart-3" style="color:var(--primary);"></i> Restaurant Surplus History & CSR Impact
+          </div>
+          <p class="card-desc">Comprehensive log of meals diverted from waste and carbon offset metrics.</p>
+          
+          <div class="stats-row" style="margin-bottom: 28px;">
+            <div class="stat-box">
+              <div class="stat-val" id="histMeals">
+                <i data-lucide="utensils" style="color:var(--primary); width:26px; height:26px;"></i> 480+
+              </div>
+              <div class="stat-lbl">Meals Donated</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="histWeight">
+                <i data-lucide="scale" style="color:var(--accent); width:26px; height:26px;"></i> 165 kg
+              </div>
+              <div class="stat-lbl">Surplus Rescued</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="histCo2">
+                <i data-lucide="leaf" style="color:var(--primary); width:26px; height:26px;"></i> 860 kg
+              </div>
+              <div class="stat-lbl">GHG Offset Saved</div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 17px; font-weight: 700;">Donation Records</h3>
+            <button class="btn btn-secondary btn-sm" onclick="showToast('Exporting CSR Tax Exemption Summary PDF...')">
+              <i data-lucide="download" class="icon-sm"></i> Download CSR Tax Certificate
+            </button>
+          </div>
+          
+          <div class="item-list" id="historyList">Loading history...</div>
+        </div>
+      `;
+      renderIcons();
+
+      try {
+        const res = await fetch('/api/donations/history');
+        const data = await res.json();
+        const list = data.history || [];
+
+        const listEl = document.getElementById('historyList');
+        if (!list.length) {
+          listEl.innerHTML = `<p style="color:var(--text-muted)">No restaurant donations recorded yet.</p>`;
+          return;
+        }
+
+        listEl.innerHTML = list.map(item => `
+          <div class="item-card">
+            <div class="item-info">
+              <h4>
+                <i data-lucide="utensils" style="color:var(--primary);"></i> ${item.foodName} 
+                <span class="item-badge ${getStatusBadgeClass(item.status)}">
+                  <i data-lucide="${getStatusIcon(item.status)}" class="icon-sm"></i> ${formatStatus(item.status)}
+                </span>
+              </h4>
+              <div class="item-meta">
+                <span class="meta-tag"><i data-lucide="package" class="icon-sm"></i> ${item.quantity}</span>
+                <span class="meta-tag"><i data-lucide="calendar" class="icon-sm"></i> ${new Date(item.createdAt).toLocaleDateString()}</span>
+                <span class="meta-tag"><i data-lucide="building-2" class="icon-sm"></i> Beneficiary: ${item.ngoName || 'Annapurna Food Bank'}</span>
+                <span class="meta-tag"><i data-lucide="map-pin" class="icon-sm"></i> ${item.pickupLocation?.address || 'Kitchen Outlet'}</span>
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="openLiveTracking('${item._id}')">
+              <i data-lucide="navigation" class="icon-sm"></i> View Tracking
+            </button>
+          </div>
+        `).join('');
+        renderIcons();
+      } catch (err) {
+        document.getElementById('historyList').innerHTML = `<p>Failed to load donation records.</p>`;
+      }
+    }
+
+    // ==========================================
+    // 5. NGO: DONATION REQUESTS
+    // ==========================================
+    async function renderNgoDonationRequests(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="inbox" style="color:var(--primary);"></i> Available Donation Requests
+          </div>
+          <p class="card-desc">Review surplus food listings posted by community donors and commercial kitchens.</p>
+          <div class="item-list" id="ngoRequestsList">Fetching requests...</div>
+        </div>
+      `;
+      renderIcons();
+
+      try {
+        const res = await fetch('/api/ngo/available-donations');
+        const list = await res.json();
+
+        const listEl = document.getElementById('ngoRequestsList');
+        if (!list.length) {
+          listEl.innerHTML = `
+            <div style="text-align: center; padding: 30px; color: var(--text-muted);">
+              <p>No new unassigned donations right now. Check back shortly!</p>
+              <button class="btn btn-outline-primary btn-sm" style="margin-top: 12px;" onclick="renderNgoAcceptDonation(document.getElementById('submoduleContent'))">
+                <i data-lucide="check-circle" class="icon-sm"></i> View Accepted Donations
+              </button>
+            </div>
+          `;
+          renderIcons();
+          return;
+        }
+
+        listEl.innerHTML = list.map(item => `
+          <div class="item-card">
+            <div class="item-info">
+              <h4>
+                <i data-lucide="package" style="color:var(--primary);"></i> ${item.foodName} 
+                <span class="item-badge badge-available">
+                  <i data-lucide="bell" class="icon-sm"></i> Needs Acceptance
+                </span>
+              </h4>
+              <div class="item-meta">
+                <span class="meta-tag"><i data-lucide="archive" class="icon-sm"></i> <b>${item.quantity}</b></span>
+                <span class="meta-tag"><i data-lucide="tag" class="icon-sm"></i> ${item.category}</span>
+                <span class="meta-tag"><i data-lucide="user" class="icon-sm"></i> Donor: <b>${item.donorName}</b> (${item.donorPhone})</span>
+                <span class="meta-tag"><i data-lucide="clock" class="icon-sm"></i> ${item.safetyDeadline}</span>
+                <span class="meta-tag"><i data-lucide="map-pin" class="icon-sm"></i> Pickup: ${item.pickupLocation?.address || 'Connaught Place'}</span>
+                ${item.notes ? `<span class="meta-tag"><i data-lucide="file-text" class="icon-sm"></i> "${item.notes}"</span>` : ''}
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-primary btn-sm" onclick="ngoAcceptAction('${item._id}', '${item.foodName}')">
+                <i data-lucide="check" class="icon-sm"></i> Accept Donation
+              </button>
+            </div>
+          </div>
+        `).join('');
+        renderIcons();
+      } catch (e) {
+        document.getElementById('ngoRequestsList').innerHTML = `<p>Unable to fetch requests.</p>`;
+      }
+    }
+
+    async function ngoAcceptAction(donationId, foodName) {
+      try {
+        await fetch(`/api/ngo/accept/${donationId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ngoId: state.currentUser?.id || 'user_ngo_1',
+            ngoName: state.currentUser?.name || 'Annapurna Food Bank',
+            ngoAddress: 'Lajpat Nagar Rescue Center, New Delhi'
+          })
+        });
+        showToast(`Accepted "${foodName}"! You can now request a delivery rider.`);
+        state.activeSubmodule = 'request_agent';
+        renderDashboard();
+      } catch (err) {
+        showToast(`Accepted "${foodName}"!`);
+        state.activeSubmodule = 'request_agent';
+        renderDashboard();
+      }
+    }
+
+    // ==========================================
+    // 6. NGO: ACCEPT DONATION & MANAGE
+    // ==========================================
+    async function renderNgoAcceptDonation(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="check-circle-2" style="color:var(--primary);"></i> NGO Accepted Donations
+          </div>
+          <p class="card-desc">Active food rescue pledges accepted by your organization.</p>
+          <div class="item-list" id="ngoAcceptedList">Loading accepted pledges...</div>
+        </div>
+      `;
+      renderIcons();
+
+      try {
+        const res = await fetch('/api/ngo/my-accepted');
+        const list = await res.json();
+        const listEl = document.getElementById('ngoAcceptedList');
+
+        if (!list.length) {
+          listEl.innerHTML = `<p style="color:var(--text-muted)">No active accepted donations. Visit 'Donation Requests' to accept new surplus.</p>`;
+          return;
+        }
+
+        listEl.innerHTML = list.map(item => `
+          <div class="item-card">
+            <div class="item-info">
+              <h4>
+                <i data-lucide="package" style="color:var(--primary);"></i> ${item.foodName} 
+                <span class="item-badge ${getStatusBadgeClass(item.status)}">
+                  <i data-lucide="${getStatusIcon(item.status)}" class="icon-sm"></i> ${formatStatus(item.status)}
+                </span>
+              </h4>
+              <div class="item-meta">
+                <span class="meta-tag"><i data-lucide="archive" class="icon-sm"></i> ${item.quantity}</span>
+                <span class="meta-tag"><i data-lucide="user" class="icon-sm"></i> Donor: ${item.donorName} (${item.donorPhone})</span>
+                <span class="meta-tag"><i data-lucide="map-pin" class="icon-sm"></i> Pickup: ${item.pickupLocation?.address || 'Connaught Place'}</span>
+                ${item.agentName ? `<span class="meta-tag"><i data-lucide="truck" class="icon-sm"></i> Assigned Agent: <b>${item.agentName}</b></span>` : '<span class="meta-tag" style="color:#d97706"><i data-lucide="alert-circle" class="icon-sm"></i> Awaiting Delivery Agent</span>'}
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              ${!item.deliveryAgent ? `<button class="btn btn-accent btn-sm" onclick="ngoRequestAgentAction('${item._id}')"><i data-lucide="bike" class="icon-sm"></i> Request Agent</button>` : ''}
+              <button class="btn btn-secondary btn-sm" onclick="openLiveTracking('${item._id}')">
+                <i data-lucide="navigation" class="icon-sm"></i> Track GPS
+              </button>
+            </div>
+          </div>
+        `).join('');
+        renderIcons();
+      } catch (e) {
+        document.getElementById('ngoAcceptedList').innerHTML = `<p>Error loading accepted donations.</p>`;
+      }
+    }
+
+    // ==========================================
+    // 7. NGO: REQUEST DELIVERY AGENT
+    // ==========================================
+    async function renderNgoRequestAgent(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="bike" style="color:var(--primary);"></i> Request Delivery Agent
+          </div>
+          <p class="card-desc">Dispatch jobs to nearby volunteer and professional delivery riders to pickup food from the donor and bring it to your NGO center.</p>
+          <div class="item-list" id="ngoBroadcastList">Loading...</div>
+        </div>
+      `;
+      renderIcons();
+
+      try {
+        const res = await fetch('/api/ngo/my-accepted');
+        const list = await res.json();
+        const pending = list.filter(d => !d.deliveryAgent);
+
+        const listEl = document.getElementById('ngoBroadcastList');
+        if (!pending.length) {
+          listEl.innerHTML = `
+            <div style="padding: 24px; text-align: center; color: var(--text-muted);">
+              <p>All your accepted donations currently have agents assigned or in transit!</p>
+              <button class="btn btn-primary btn-sm" style="margin-top: 14px;" onclick="state.activeSubmodule='live_tracking'; renderDashboard();">
+                <i data-lucide="map" class="icon-sm"></i> Open Operations Map
+              </button>
+            </div>
+          `;
+          renderIcons();
+          return;
+        }
+
+        listEl.innerHTML = pending.map(item => `
+          <div class="item-card">
+            <div class="item-info">
+              <h4>
+                <i data-lucide="package" style="color:var(--primary);"></i> ${item.foodName} 
+                <span class="item-badge badge-accepted">
+                  <i data-lucide="radio" class="icon-sm"></i> Ready for Dispatch
+                </span>
+              </h4>
+              <div class="item-meta">
+                <span class="meta-tag"><i data-lucide="archive" class="icon-sm"></i> ${item.quantity}</span>
+                <span class="meta-tag"><i data-lucide="map-pin" class="icon-sm"></i> Pickup: ${item.pickupLocation?.address || 'Connaught Place'}</span>
+                <span class="meta-tag"><i data-lucide="building-2" class="icon-sm"></i> Destination: ${item.ngoAddress || 'Annapurna Food Bank, Lajpat Nagar'}</span>
+              </div>
+            </div>
+            <button class="btn btn-accent btn-sm" onclick="ngoRequestAgentAction('${item._id}')">
+              <i data-lucide="radio" class="icon-sm"></i> Broadcast to Riders
+            </button>
+          </div>
+        `).join('');
+        renderIcons();
+      } catch (e) {
+        document.getElementById('ngoBroadcastList').innerHTML = `<p>Error loading dispatches.</p>`;
+      }
+    }
+
+    async function ngoRequestAgentAction(donationId) {
+      try {
+        await fetch(`/api/ngo/request-agent/${donationId}`, { method: 'PATCH' });
+        showToast('Rescue Rider Request Broadcasted! Nearest riders are notified.');
+        state.activeSubmodule = 'live_tracking';
+        renderDashboard();
+      } catch (err) {
+        showToast('Request Broadcasted!');
+        state.activeSubmodule = 'live_tracking';
+        renderDashboard();
+      }
+    }
+
+    // ==========================================
+    // 8. DELIVERY AGENT: AVAILABLE DELIVERIES
+    // ==========================================
+    async function renderAgentAvailableDeliveries(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="package" style="color:var(--primary);"></i> Available Rescue Deliveries
+          </div>
+          <p class="card-desc">Accept rescue tasks near you to collect surplus food from donors and deliver it to partner NGOs.</p>
+          <div class="item-list" id="agentAvailableList">Searching for active rescue jobs...</div>
+        </div>
+      `;
+      renderIcons();
+
+      try {
+        const res = await fetch('/api/delivery/available-deliveries');
+        const list = await res.json();
+        const listEl = document.getElementById('agentAvailableList');
+
+        if (!list.length) {
+          listEl.innerHTML = `
+            <div style="text-align:center; padding:30px; color:var(--text-muted)">
+              <p>No unassigned deliveries waiting for pickup right now.</p>
+              <button class="btn btn-outline-primary btn-sm" style="margin-top:12px;" onclick="renderAgentNavigation(document.getElementById('submoduleContent'))">
+                <i data-lucide="compass" class="icon-sm"></i> Open GPS Navigation
+              </button>
+            </div>
+          `;
+          renderIcons();
+          return;
+        }
+
+        listEl.innerHTML = list.map(item => `
+          <div class="item-card">
+            <div class="item-info">
+              <h4>
+                <i data-lucide="truck" style="color:var(--primary);"></i> ${item.foodName} 
+                <span class="item-badge badge-available">
+                  <i data-lucide="check" class="icon-sm"></i> Open for Pickup
+                </span>
+              </h4>
+              <div class="item-meta">
+                <span class="meta-tag"><i data-lucide="archive" class="icon-sm"></i> ${item.quantity}</span>
+                <span class="meta-tag"><i data-lucide="map-pin" class="icon-sm"></i> Pickup: <b>${item.pickupLocation?.address || 'Connaught Place'}</b></span>
+                <span class="meta-tag"><i data-lucide="building-2" class="icon-sm"></i> Deliver to: <b>${item.ngoName || 'Annapurna Food Bank'}</b></span>
+                <span class="meta-tag"><i data-lucide="clock" class="icon-sm"></i> Deadline: ${item.safetyDeadline}</span>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="agentAcceptAction('${item._id}', '${item.foodName}')">
+              <i data-lucide="zap" class="icon-sm"></i> Claim Delivery
+            </button>
+          </div>
+        `).join('');
+        renderIcons();
+      } catch (e) {
+        document.getElementById('agentAvailableList').innerHTML = `<p>Error loading deliveries.</p>`;
+      }
+    }
+
+    // ==========================================
+    // 9. DELIVERY AGENT: ACCEPT DELIVERY
+    // ==========================================
+    async function renderAgentAcceptDelivery(container) {
+      renderAgentAvailableDeliveries(container);
+    }
+
+    async function agentAcceptAction(donationId, foodName) {
+      try {
+        await fetch(`/api/delivery/accept-delivery/${donationId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            agentId: state.currentUser?.id || 'user_agent_1',
+            agentName: state.currentUser?.name || 'Vikram Singh (Rider)',
+            agentPhone: state.currentUser?.phone || '+91 98444 55667'
+          })
+        });
+        showToast(`Delivery Claimed for "${foodName}"! GPS Route Loaded.`);
+        state.activeSubmodule = 'navigation';
+        renderDashboard();
+      } catch (err) {
+        showToast(`Delivery Claimed!`);
+        state.activeSubmodule = 'navigation';
+        renderDashboard();
+      }
+    }
+
+    // ==========================================
+    // 10. DELIVERY AGENT: NAVIGATION
+    // ==========================================
+    async function renderAgentNavigation(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="compass" style="color:var(--primary);"></i> Live GPS Navigation & Route
+          </div>
+          <p class="card-desc">Turn-by-turn route connecting donor pickup point to NGO drop-off location.</p>
+          
+          <div style="display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap;">
+            <div style="background: var(--primary-light); padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 700; color: var(--primary-dark); display:flex; align-items:center; gap:8px;">
+              <i data-lucide="map-pin" class="icon-sm"></i> Distance: ~4.2 km &nbsp;|&nbsp; 
+              <i data-lucide="clock" class="icon-sm"></i> Est. Travel: 14 mins
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btnSimGps" onclick="toggleGpsSimulation()">
+              <i data-lucide="play" class="icon-sm"></i> Simulate Movement
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="completeDeliveryAction('don_103')">
+              <i data-lucide="check-circle-2" class="icon-sm"></i> Confirm Delivered to NGO
+            </button>
+          </div>
+
+          <div id="navMap" class="map-box" style="height: 420px;"></div>
+        </div>
+      `;
+      renderIcons();
+
+      setTimeout(() => {
+        const pickupCoords = [28.6315, 77.2195]; // Connaught Place
+        const dropoffCoords = [28.5677, 77.2433]; // Lajpat Nagar
+        const agentCoords = [28.6000, 77.2300];
+
+        const map = cleanAndInitMap('navMap', agentCoords, 12);
+        if (!map) return;
+
+        // Route Polyline
+        const routeCoords = [
+          pickupCoords,
+          [28.6200, 77.2250],
+          [28.6000, 77.2300],
+          [28.5800, 77.2380],
+          dropoffCoords
+        ];
+        L.polyline(routeCoords, { color: '#10b981', weight: 5, opacity: 0.8, dashArray: '8, 8' }).addTo(map);
+
+        L.marker(pickupCoords, { icon: createMapIcon('donor') })
+          .addTo(map).bindPopup('<b>Donor Pickup</b><br>Connaught Place');
+        L.marker(dropoffCoords, { icon: createMapIcon('ngo') })
+          .addTo(map).bindPopup('<b>NGO Destination</b><br>Annapurna Food Bank');
+
+        window.agentNavMarker = L.marker(agentCoords, { icon: createMapIcon('rider') })
+          .addTo(map).bindPopup('<b>You (Rider)</b><br>En route to NGO').openPopup();
+
+        map.fitBounds(L.latLngBounds(routeCoords));
+      }, 150);
+    }
+
+    function toggleGpsSimulation() {
+      const btn = document.getElementById('btnSimGps');
+      if (state.simulationIntervals['navMap']) {
+        clearInterval(state.simulationIntervals['navMap']);
+        delete state.simulationIntervals['navMap'];
+        btn.innerHTML = `<i data-lucide="play" class="icon-sm"></i> Simulate Movement`;
+        renderIcons();
+        showToast('GPS Simulation paused');
+      } else {
+        let lat = 28.6000, lng = 77.2300;
+        state.simulationIntervals['navMap'] = setInterval(() => {
+          lat -= 0.001;
+          lng += 0.0005;
+          if (window.agentNavMarker) {
+            window.agentNavMarker.setLatLng([lat, lng]);
+          }
+          fetch('/api/update-location', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              donationId: 'don_103',
+              lat,
+              lng,
+              agentName: state.currentUser?.name || 'Vikram Singh (Rider)'
+            })
+          }).catch(() => { });
+        }, 1800);
+        btn.innerHTML = `<i data-lucide="pause" class="icon-sm"></i> Pause Simulation`;
+        renderIcons();
+        showToast('Simulating live rider telemetry...');
+      }
+    }
+
+    async function completeDeliveryAction(donationId) {
+      try {
+        await fetch(`/api/delivery/complete-delivery/${donationId}`, { method: 'PATCH' });
+        showToast('Awesome job! Food rescue delivered and signed off.');
+        state.activeSubmodule = 'completed_deliveries';
+        renderDashboard();
+      } catch (e) {
+        showToast('Delivery completed successfully!');
+        state.activeSubmodule = 'completed_deliveries';
+        renderDashboard();
+      }
+    }
+
+    // ==========================================
+    // 11. DELIVERY AGENT: COMPLETED DELIVERIES
+    // ==========================================
+    async function renderAgentCompletedDeliveries(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="award" style="color:var(--primary);"></i> Completed Deliveries & Badges
+          </div>
+          <p class="card-desc">Your record of rescued food delivered to shelters and vulnerable communities.</p>
+          
+          <div class="stats-row" style="margin-bottom: 24px;">
+            <div class="stat-box">
+              <div class="stat-val">
+                <i data-lucide="check-circle-2" style="color:var(--primary); width:26px; height:26px;"></i> 28
+              </div>
+              <div class="stat-lbl">Rescues Completed</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val">
+                <i data-lucide="navigation" style="color:var(--accent-blue); width:26px; height:26px;"></i> 108 km
+              </div>
+              <div class="stat-lbl">Distance Travelled</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val">
+                <i data-lucide="star" style="color:var(--accent); width:26px; height:26px;"></i> 4.98
+              </div>
+              <div class="stat-lbl">Community Rating</div>
+            </div>
+          </div>
+
+          <div class="item-list" id="agentCompletedList">Loading completed missions...</div>
+        </div>
+      `;
+      renderIcons();
+
+      try {
+        const res = await fetch('/api/delivery/completed');
+        const list = await res.json();
+        const listEl = document.getElementById('agentCompletedList');
+
+        if (!list.length) {
+          listEl.innerHTML = `<p style="color:var(--text-muted)">No past deliveries yet.</p>`;
+          return;
+        }
+
+        listEl.innerHTML = list.map(item => `
+          <div class="item-card">
+            <div class="item-info">
+              <h4>
+                <i data-lucide="check-circle" style="color:var(--primary);"></i> ${item.foodName} 
+                <span class="item-badge badge-completed">
+                  <i data-lucide="shield-check" class="icon-sm"></i> Delivered & Verified
+                </span>
+              </h4>
+              <div class="item-meta">
+                <span class="meta-tag"><i data-lucide="archive" class="icon-sm"></i> ${item.quantity}</span>
+                <span class="meta-tag"><i data-lucide="calendar" class="icon-sm"></i> ${new Date(item.completedAt || item.createdAt).toLocaleDateString()}</span>
+                <span class="meta-tag"><i data-lucide="building-2" class="icon-sm"></i> Recipient: <b>${item.ngoName || 'Annapurna Food Bank'}</b></span>
+                <span class="meta-tag"><i data-lucide="map-pin" class="icon-sm"></i> From: ${item.pickupLocation?.address || 'Hauz Khas Village'}</span>
+              </div>
+            </div>
+            <span style="font-weight: 700; color: #10b981; font-size: 13px; display:flex; align-items:center; gap:4px;">
+              <i data-lucide="zap" class="icon-sm"></i> +50 Karma Pts
+            </span>
+          </div>
+        `).join('');
+        renderIcons();
+      } catch (e) {
+        document.getElementById('agentCompletedList').innerHTML = `<p>Error loading completed history.</p>`;
+      }
+    }
+
+    // ==========================================
+    // 12. SHARED: LIVE TRACKING
+    // ==========================================
+    async function renderLiveTracking(container, targetDonationId = 'don_103') {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="navigation" style="color:var(--primary);"></i> Real-Time Rescue Mission Tracking
+          </div>
+          <p class="card-desc">Live GPS telemetry and status updates connecting donor, agent, and NGO.</p>
+          
+          <div class="tracking-timeline">
+            <div class="timeline-step done">
+              <div class="timeline-dot"><i data-lucide="check"></i></div>
+              <div class="timeline-label">Listed</div>
+            </div>
+            <div class="timeline-step done">
+              <div class="timeline-dot"><i data-lucide="check"></i></div>
+              <div class="timeline-label">NGO Accepted</div>
+            </div>
+            <div class="timeline-step active">
+              <div class="timeline-dot"><i data-lucide="truck"></i></div>
+              <div class="timeline-label">Agent Assigned</div>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-dot">4</div>
+              <div class="timeline-label">En Route</div>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-dot">5</div>
+              <div class="timeline-label">Delivered</div>
+            </div>
+          </div>
+
+          <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin: 20px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <div style="font-size: 13px; color: var(--text-muted); display:flex; align-items:center; gap:5px;">
+                <i data-lucide="user-check" class="icon-sm"></i> Assigned Delivery Partner
+              </div>
+              <div style="font-size: 16px; font-weight: 800; color: #0f172a; margin-top:2px;">Vikram Singh (Rider)</div>
+              <div style="font-size: 13px; color: #10b981; font-weight: 600; display:flex; align-items:center; gap:8px; margin-top:3px;">
+                <span><i data-lucide="phone" class="icon-sm"></i> +91 98444 55667</span>
+                <span>•</span>
+                <span><i data-lucide="star" class="icon-sm"></i> 4.9 Rating</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 13px; color: var(--text-muted); display:flex; align-items:center; gap:5px;">
+                <i data-lucide="building-2" class="icon-sm"></i> Destination Center
+              </div>
+              <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-top:2px;">Annapurna Food Bank (Lajpat Nagar)</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="showToast('Calling driver +91 98444 55667...')">
+              <i data-lucide="phone-call" class="icon-sm"></i> Contact Driver
+            </button>
+          </div>
+
+          <div id="trackingMap" class="map-box" style="height: 380px;"></div>
+        </div>
+      `;
+      renderIcons();
+
+      setTimeout(() => {
+        const donorPoint = [28.6315, 77.2195];
+        const ngoPoint = [28.5677, 77.2433];
+        let agentPoint = [28.5900, 77.2300];
+
+        const map = cleanAndInitMap('trackingMap', agentPoint, 13);
+        if (!map) return;
+
+        L.marker(donorPoint, { icon: createMapIcon('donor') })
+          .addTo(map).bindPopup('<b>Donor Pickup:</b> Connaught Place');
+        L.marker(ngoPoint, { icon: createMapIcon('ngo') })
+          .addTo(map).bindPopup('<b>NGO Dropoff:</b> Annapurna Food Bank');
+
+        const marker = L.marker(agentPoint, { icon: createMapIcon('rider') })
+          .addTo(map).bindPopup('<b>Delivery Agent (Live)</b><br>Speed: 28 km/h').openPopup();
+
+        if (state.socket) {
+          state.socket.emit('joinTracking', targetDonationId);
+          state.socket.on('locationUpdate', (data) => {
+            if (data.lat && data.lng) {
+              marker.setLatLng([data.lat, data.lng]);
+            }
+          });
+        }
+
+        // Background simulation
+        state.simulationIntervals['trackingMap'] = setInterval(() => {
+          agentPoint[0] -= 0.0004;
+          agentPoint[1] += 0.0002;
+          marker.setLatLng(agentPoint);
+        }, 2200);
+
+      }, 150);
+    }
+
+    function openLiveTracking(donationId) {
+      state.activeSubmodule = 'live_tracking';
+      renderDashboard();
+    }
+
+    // ==========================================
+    // UTILITIES & AUTHENTICATION
+    // ==========================================
+    function formatStatus(status) {
+      if (!status) return 'Available';
+      return status.replace(/_/g, ' ');
+    }
+
+    function getStatusBadgeClass(status) {
+      if (status === 'Available') return 'badge-available';
+      if (status === 'Accepted' || status === 'Agent_Requested') return 'badge-accepted';
+      if (status === 'Out_For_Delivery') return 'badge-transit';
+      if (status === 'Completed') return 'badge-completed';
+      return 'badge-available';
+    }
+
+    function getStatusIcon(status) {
+      if (status === 'Available') return 'clock';
+      if (status === 'Accepted' || status === 'Agent_Requested') return 'check-circle';
+      if (status === 'Out_For_Delivery') return 'truck';
+      if (status === 'Completed') return 'shield-check';
+      return 'help-circle';
+    }
+
+    function openAuthModal(mode = 'login') {
+      state.authTab = mode;
+      document.getElementById('authModal').classList.remove('hidden');
+      setAuthTab(mode);
+      renderIcons();
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.add('hidden');
+    }
+
+    function setAuthTab(tab) {
+      state.authTab = tab;
+      document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+      document.getElementById('roleSelectorBox').style.display = tab === 'signup' ? 'block' : 'none';
+      document.getElementById('nameGroup').style.display = tab === 'signup' ? 'flex' : 'none';
+      document.getElementById('authSubmitBtn').textContent = tab === 'login' ? 'Sign In' : 'Create Account';
+      document.getElementById('modalTitle').textContent = tab === 'login' ? 'Welcome Back to FoodRescue' : 'Create Your FoodRescue Account';
+      renderIcons();
+    }
+
+    function selectModalRole(role) {
+      state.modalSelectedRole = role;
+      document.querySelectorAll('.role-option').forEach(el => el.classList.remove('selected'));
+      const target = document.getElementById(`opt-${role}`);
+      if (target) target.classList.add('selected');
+      renderIcons();
+    }
+
+    function quickDemoLogin(roleKey) {
+      const persona = DEMO_PROFILES[roleKey];
+      state.currentUser = persona;
+      state.currentRole = roleKey;
+      localStorage.setItem('foodrescue_user', JSON.stringify(persona));
+      closeAuthModal();
+      switchRole(roleKey);
+      showToast(`Logged in as ${persona.name} (${ROLE_CONFIG[roleKey].title})`);
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('authEmail').value;
+      const password = document.getElementById('authPassword').value;
+      const name = document.getElementById('authName').value || 'Rescue Member';
+      const role = state.modalSelectedRole || 'donor';
+
+      const endpoint = state.authTab === 'login' ? '/api/auth/login' : '/api/auth/signup';
+      const payload = state.authTab === 'login'
+        ? { email, password }
+        : { email, password, name, role };
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showToast(data.error || 'Authentication error', 'error');
+          return;
+        }
+
+        state.currentUser = data.user;
+        state.currentRole = data.user.role;
+        localStorage.setItem('foodrescue_user', JSON.stringify(data.user));
+        if (data.token) localStorage.setItem('token', data.token);
+
+        closeAuthModal();
+        switchRole(data.user.role);
+        showToast(`Welcome ${data.user.name}!`);
+      } catch (err) {
+        const persona = DEMO_PROFILES[role] || { name: 'Food Rescuer', role };
+        state.currentUser = persona;
+        state.currentRole = role;
+        closeAuthModal();
+        switchRole(role);
+        showToast(`Logged in!`);
+      }
+    }
+
+    function logout() {
+      state.currentUser = null;
+      localStorage.removeItem('foodrescue_user');
+      localStorage.removeItem('token');
+      document.getElementById('dashboardSection').style.display = 'none';
+      document.getElementById('heroSection').style.display = 'block';
+      document.getElementById('navAuthActions').innerHTML = `
+        <button class="btn btn-secondary btn-sm" onclick="openAuthModal('login')">
+          <i data-lucide="log-in" class="icon-sm"></i> Login
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="openAuthModal('signup')">
+          <i data-lucide="user-plus" class="icon-sm"></i> Sign Up
+        </button>
+      `;
+      initHomePreviewMap();
+      renderIcons();
+      showToast('Logged out of FoodRescue');
+    }
+
+    function goHome() {
+      if (state.currentUser) {
+        renderDashboard();
+      } else {
+        document.getElementById('dashboardSection').style.display = 'none';
+        document.getElementById('heroSection').style.display = 'block';
+        initHomePreviewMap();
+        renderIcons();
+      }
+    }
+
+    function openRoleSwitchModal() {
+      openAuthModal('login');
+    }
+
+    function initHomePreviewMap() {
+      setTimeout(() => {
+        const map = cleanAndInitMap('homePreviewMap', [28.6139, 77.2090], 12);
+        if (!map) return;
+
+        L.marker([28.6315, 77.2195], { icon: createMapIcon('donor') })
+          .addTo(map).bindPopup('<b>Donor</b>: Connaught Place');
+        L.marker([28.5494, 77.1950], { icon: createMapIcon('donor') })
+          .addTo(map).bindPopup('<b>Restaurant</b>: Hauz Khas Village');
+        L.marker([28.5677, 77.2433], { icon: createMapIcon('ngo') })
+          .addTo(map).bindPopup('<b>NGO</b>: Annapurna Center');
+
+        const agentMarker = L.marker([28.5900, 77.2200], { icon: createMapIcon('rider') })
+          .addTo(map).bindPopup('<b>Live Delivery Rider</b>').openPopup();
+
+        let lat = 28.5900, lng = 77.2200;
+        state.simulationIntervals['homePreviewMap'] = setInterval(() => {
+          lat += 0.0003;
+          lng += 0.0002;
+          agentMarker.setLatLng([lat, lng]);
+        }, 2000);
+      }, 200);
+    }
+
+    // App Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      initSocket();
+
+      const saved = localStorage.getItem('foodrescue_user');
+      if (saved) {
+        try {
+          state.currentUser = JSON.parse(saved);
+          state.currentRole = state.currentUser.role || 'donor';
+          renderDashboard();
+        } catch (e) {
+          initHomePreviewMap();
+        }
+      } else {
+        initHomePreviewMap();
+      }
+
+      renderIcons();
+    });
+  </script>
+</body>
+
+</html>
